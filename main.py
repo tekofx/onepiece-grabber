@@ -2,7 +2,15 @@ import os
 import requests
 import re
 import yaml
-from rich.progress import Progress
+import sys
+import logging
+from time import sleep
+
+logging.basicConfig(
+    filename="log.txt",
+    level=logging.INFO,
+    format="%(asctime)s,%(msecs)d %(levelname)s %(message)s",
+)
 
 URL = "https://onepiecechapters.com"
 DATA_FILE = "data.yaml"
@@ -59,26 +67,43 @@ def download_chapter(chapter: dict):
     num = 1
 
     pages = [item for item in text if "cdn.onepiecechapters.com" in item]
-    with Progress() as progress:
-        task = progress.add_task("Downloading...", total=len(pages))
-        for t in pages:
-            aux = re.search('src="(.+?)" ', t).group(1)
-            img = requests.get(aux).content
-            with open(f"{folder}/page{num}.png", "wb") as handler:
-                handler.write(img)
-            num += 1
-            progress.update(task, advance=1)
+    for t in pages:
+        aux = re.search('src="(.+?)" ', t).group(1)
+        img = requests.get(aux).content
+        with open(f"{folder}/page{num}.png", "wb") as handler:
+            handler.write(img)
+        num += 1
 
 
-latest_chapter = get_latest_chapter()
-num = latest_chapter["num"]
-url = latest_chapter["url"]
+if "-s" in sys.argv:
+    log = logging.getLogger("main")
+    while True:
+        latest_chapter = get_latest_chapter()
+        num = latest_chapter["num"]
+        url = latest_chapter["url"]
 
-if get_saved_chapter() == num:
-    print("No new update")
+        if get_saved_chapter() == num:
+            log.info("No new update")
+        else:
+            log.info(f"New chapter {num} available")
+            log.info(f"Downloading chapter {num}")
+            download_chapter(latest_chapter)
+            log.info(latest_chapter["url"])
+            write_saved_chapter(num)
+
+        sleep(60 * 60)
+
+
 else:
-    print(f"New chapter {num} available")
-    print(f"Downloading chapter {num}")
-    download_chapter(latest_chapter)
-    print(latest_chapter["url"])
-    write_saved_chapter(num)
+    latest_chapter = get_latest_chapter()
+    num = latest_chapter["num"]
+    url = latest_chapter["url"]
+
+    if get_saved_chapter() == num:
+        print("No new update")
+    else:
+        print(f"New chapter {num} available")
+        print(f"Downloading chapter {num}")
+        download_chapter(latest_chapter)
+        print(latest_chapter["url"])
+        write_saved_chapter(num)
