@@ -15,6 +15,14 @@ logging.basicConfig(
 URL = "https://onepiecechapters.com"
 DATA_FILE = "data.yaml"
 DOWNLOAD_FOLDER = "data"
+HELP = """Download a chapter:
+    python3 main.py <chapter>
+    
+Download a set of chapters
+    python3 main.py <firs_chapter> <last_chapter>
+        
+Check every hour if theres a new chapter
+    python3 main.py -s"""
 
 
 def read_yaml():
@@ -160,6 +168,10 @@ elif len(sys.argv) == 3:  # python3 main.py 3 5
     chapters = get_chapters(num_first, num_last)
     print(f"Downloading chapters {num_first}-{num_last}")
     download_chapters(chapters)
+
+elif "-h" in sys.argv or "--help" in sys.argv:
+
+    print(HELP)
 
 else:  # python3 main.py 3
     chapter = sys.argv[1]
