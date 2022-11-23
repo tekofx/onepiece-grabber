@@ -136,8 +136,7 @@ def get_chapters(first: int, last: int) -> dict[str, str]:
 
 chapters = get_chapters(1, 5)
 
-
-""" if "-s" in sys.argv:
+if "-s" in sys.argv:  # python3 main.py -s
     log = logging.getLogger("main")
     while True:
         latest_chapter = get_latest_chapter()
@@ -155,17 +154,15 @@ chapters = get_chapters(1, 5)
 
         sleep(60 * 60)
 
+elif len(sys.argv) == 3:  # python3 main.py 3 5
+    num_first = sys.argv[1]
+    num_last = sys.argv[2]
+    chapters = get_chapters(num_first, num_last)
+    print(f"Downloading chapters {num_first}-{num_last}")
+    download_chapters(chapters)
 
-else:
-    latest_chapter = get_latest_chapter()
-    num = latest_chapter["num"]
-    url = latest_chapter["url"]
-
-    if get_saved_chapter() == num:
-        print("No new update")
-    else:
-        print(f"New chapter {num} available")
-        print(f"Downloading chapter {num}")
-        download_chapter(latest_chapter)
-        print(latest_chapter["url"])
-        write_saved_chapter(num) """
+else:  # python3 main.py 3
+    chapter = sys.argv[1]
+    chapter = get_chapter(chapter)
+    print(f"Downloading chapter {chapter}")
+    download_chapter(chapter)
