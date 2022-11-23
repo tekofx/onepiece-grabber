@@ -5,6 +5,7 @@ import yaml
 import sys
 import logging
 from time import sleep
+import threading
 
 logging.basicConfig(
     filename="log.txt",
@@ -23,6 +24,8 @@ Download a set of chapters
         
 Check every hour if theres a new chapter
     python3 main.py -s"""
+
+THREADS = 10
 
 
 def read_yaml():
@@ -103,8 +106,27 @@ def get_chapter(num: int) -> dict[str, str]:
 
 
 def download_chapters(chapters: list):
+
+    chunks = chunkIt(chapters, THREADS)
+    for x in chunks:
+        z = threading.Thread(target=download_chapters_aux, args=(x,))
+        z.start()
+
+
+def chunkIt(seq, num):
+    avg = len(seq) / float(num)
+    out = []
+    last = 0.0
+
+    while last < len(seq):
+        out.append(seq[int(last) : int(last + avg)])
+        last += avg
+
+    return out
+
+
+def download_chapters_aux(chapters: list):
     for x in chapters:
-        print(f"Downloading chapter {x['num']}")
         download_chapter(x)
 
 
@@ -142,8 +164,6 @@ def get_chapters(first: int, last: int) -> dict[str, str]:
     return chapters
 
 
-chapters = get_chapters(1, 5)
-
 if "-s" in sys.argv:  # python3 main.py -s
     log = logging.getLogger("main")
     while True:
@@ -176,5 +196,5 @@ elif "-h" in sys.argv or "--help" in sys.argv:
 else:  # python3 main.py 3
     chapter = sys.argv[1]
     chapter = get_chapter(chapter)
-    print(f"Downloading chapter {chapter}")
+    print(f"Downloading chapter {chapter['num']}")
     download_chapter(chapter)
