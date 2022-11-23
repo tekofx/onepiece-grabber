@@ -94,8 +94,48 @@ def get_chapter(num: int) -> dict[str, str]:
             return {"num": num, "url": url}
 
 
-chapter = get_chapter(57)
-download_chapter(chapter)
+def download_chapters(chapters: list):
+    for x in chapters:
+        print(f"Downloading chapter {x['num']}")
+        download_chapter(x)
+
+
+def get_chapters(first: int, last: int) -> dict[str, str]:
+
+    url = get_latest_chapter()["url"]
+    r = requests.get(url)
+    html = r.text.splitlines()
+    selector_begin = [item for item in html if '<select id="change-chapter"' in item][0]
+    selector_end = [item for item in html if "</select>" in item][0]
+
+    pos_begin = html.index(selector_begin)
+    pos_end = html.index(selector_end)
+
+    selector = html[pos_begin:pos_end]
+
+    for x in selector:
+        if f">Chapter {last}</option>" in x:
+            pos_first = selector.index(x)
+
+        if f">Chapter {first}</option>" in x:
+            pos_last = selector.index(x)
+            break
+
+    selector = selector[pos_first : pos_last + 1]
+    selector.reverse()
+
+    chapters = []
+    for x in selector:
+        value = re.search('value="(.+?)"', x).group(1)
+        num = re.search("Chapter (.+?)<", x).group(1)
+        url = URL + value + f"/one-piece-chapter-{num}"
+        chapters.append({"num": num, "url": url})
+
+    return chapters
+
+
+chapters = get_chapters(1, 5)
+
 
 """ if "-s" in sys.argv:
     log = logging.getLogger("main")
